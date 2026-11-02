@@ -1,7 +1,7 @@
 // Build stamp for cache-busting. Written by `node tools/seal-hunt.mjs seal` (or `stamp`); do not edit.
 // Pages load this file fresh (version.js?t=<now>) and every other file with ?v=<build>, so a phone never
 // mixes cached old files with new ones. See the head snippet in the screen builders' API notes.
-window.FOR_UNTO_US_BUILD = '20261101T004357Z';
+window.FOR_UNTO_US_BUILD = '20261102T022451Z';
 // ForUntoUsAsset('art/x.jpg') -> 'art/x.jpg?v=<build>'
 window.ForUntoUsAsset = function (path) {
   path = String(path);
