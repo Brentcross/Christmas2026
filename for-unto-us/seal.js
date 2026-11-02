@@ -18,7 +18,7 @@
 (function () {
   'use strict';
   var enc = new TextEncoder(), dec = new TextDecoder();
-  var PASS_KEY = 'star-hunt:mc-passphrase';
+  var PASS_KEY = 'for-unto-us:mc-passphrase';
 
   function sealed() {
     var h = window.HUNT_SEALED;

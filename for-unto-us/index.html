@@ -13,9 +13,9 @@
 <!-- 1. version.js always loads fresh; 2. everything else loads with ?v=<build> -->
 <script>document.write('<script src="version.js?t=' + Date.now() + '"><\/script>');</script>
 <script>
-StarHuntLoad(['css/tokens.css', 'css/base.css', 'css/player.css',
+ForUntoUsLoad(['css/tokens.css', 'css/base.css', 'css/player.css',
   'config.js', 'hunt.sealed.js', 'seal.js', 'store.js']);
-document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('img/star.svg') + '">');
+document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('img/star.svg') + '">');
 </script>
 </head>
 <body>
@@ -59,9 +59,9 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('i
   function sset(st, k, v) { try { if (st) { if (v == null) st.removeItem(k); else st.setItem(k, v); } } catch (e) {} }
 
   const gameId = S ? S.gameId : 'x';
-  const ME_KEY = 'star-hunt:me:' + gameId;
-  const PENDING_KEY = 'star-hunt:pending:' + gameId;
-  const LOCK_KEY = 'star-hunt:pin-lock:' + gameId;
+  const ME_KEY = 'for-unto-us:me:' + gameId;
+  const PENDING_KEY = 'for-unto-us:pending:' + gameId;
+  const LOCK_KEY = 'for-unto-us:pin-lock:' + gameId;
   // Who is signed in on this phone. In demo mode each browser tab is its own player.
   const meStore = () => storage(DEMO ? 'sessionStorage' : 'localStorage');
 
@@ -208,7 +208,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('i
     const portrait = w && h && h / w > 1.15;
     const work = [art.artist ? tx(art.artist) : '', art.title ? '<i>' + tx(art.title) + '</i>' : '', art.year ? esc(art.year) : ''].filter(Boolean).join(', ');
     const credit = creditHtml(art);
-    return '<figure class="plate' + (portrait ? ' plate--portrait' : '') + '"><img src="' + esc(StarHuntAsset(art.src)) + '"' +
+    return '<figure class="plate' + (portrait ? ' plate--portrait' : '') + '"><img src="' + esc(ForUntoUsAsset(art.src)) + '"' +
       (w && h ? ' width="' + w + '" height="' + h + '"' : '') + ' alt="' + esc(art.alt || '') + '" decoding="async" onerror="artFail(this)"></figure>' +
       (work || credit ? '<div class="object-label">' + (work ? '<span class="work">' + work + '</span>' : '') +
         (credit ? '<span class="credit">' + credit + '</span>' : '') + '</div>' : '');
@@ -302,7 +302,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('i
     const work = c ? [c.artist ? tx(c.artist) : '', c.title ? '<i>' + tx(c.title) + '</i>' : ''].filter(Boolean).join(', ') : '';
     const credit = c ? creditHtml(c) : '';
     const cover = c && c.src
-      ? '<figure class="cover"><img src="' + esc(StarHuntAsset(c.src)) + '"' + (c.w && c.h ? ' width="' + c.w + '" height="' + c.h + '"' : '') +
+      ? '<figure class="cover"><img src="' + esc(ForUntoUsAsset(c.src)) + '"' + (c.w && c.h ? ' width="' + c.w + '" height="' + c.h + '"' : '') +
         ' alt="' + esc(c.alt || '') + '" onerror="artFail(this)"><span class="wordmark">' + esc(HUNT.title) + '</span></figure>' +
         (work || credit ? '<p class="cover-credit">' + (work ? '<span class="work">' + work + ' (detail)</span>' : '') +
           (credit ? '<span class="credit">' + credit + '</span>' : '') + '</p>' : '')
@@ -923,7 +923,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('i
   function newerBuild() {
     const ask = fetch('version.js?t=' + Date.now(), { cache: 'no-store' })
       .then(r => (r.ok ? r.text() : ''))
-      .then(s => { const m = /STAR_HUNT_BUILD\s*=\s*['"]([^'"]+)['"]/.exec(s); return !!(m && window.STAR_HUNT_BUILD && m[1] !== window.STAR_HUNT_BUILD); })
+      .then(s => { const m = /FOR_UNTO_US_BUILD\s*=\s*['"]([^'"]+)['"]/.exec(s); return !!(m && window.FOR_UNTO_US_BUILD && m[1] !== window.FOR_UNTO_US_BUILD); })
       .catch(() => false);
     return Promise.race([ask, new Promise(res => setTimeout(() => res(false), 4000))]);
   }

@@ -1,0 +1,47 @@
+name: Tests
+
+# The sealing and game-state tests always run. With the MC passphrase in the repository secret
+# FOR_UNTO_US_PASSPHRASE, the real sealed hunt is checked too and the whole race is played end to end.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      FOR_UNTO_US_PASSPHRASE: ${{ secrets.FOR_UNTO_US_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install test tools
+        run: |
+          npm install --no-save --no-package-lock playwright jsqr pngjs
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y poppler-utils
+
+      - name: Sealing
+        run: node tools/seal-test.mjs
+
+      - name: Game state
+        run: node tools/store-test.mjs
+
+      - name: Release check (real hunt)
+        if: env.FOR_UNTO_US_PASSPHRASE != ''
+        run: FOR_UNTO_US_RELEASE=1 node tools/seal-test.mjs
+
+      - name: Whole race, end to end
+        if: env.FOR_UNTO_US_PASSPHRASE != ''
+        run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 --directory . >/dev/null 2>&1 &
+          sleep 2
+          node tools/for-unto-us-test.mjs

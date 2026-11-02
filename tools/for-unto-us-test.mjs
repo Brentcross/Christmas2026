@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// End-to-end test of For Unto Us (star-hunt/), the whole race on the REAL sealed hunt.
+// End-to-end test of For Unto Us (for-unto-us/), the whole race on the REAL sealed hunt.
 //
 //   python3 -m http.server 8080 --bind 127.0.0.1 --directory .     (from the repo root, in another terminal)
-//   STAR_HUNT_PASSPHRASE=... node tools/star-hunt-test.mjs [screenshotDir]
+//   FOR_UNTO_US_PASSPHRASE=... node tools/for-unto-us-test.mjs [screenshotDir]
 //
 // Environment:
-//   STAR_HUNT_PASSPHRASE  required: the MC passphrase. The test unseals star-hunt/hunt.sealed.js with it to
+//   FOR_UNTO_US_PASSPHRASE  required: the MC passphrase. The test unseals for-unto-us/hunt.sealed.js with it to
 //                         learn the codes, riddles and answers, and types it into mc.html and print.html.
 //   URL                   where the repo root is served (default http://127.0.0.1:8080/). It must be on 127.0.0.1:
 //                         the pages need a secure context for crypto.subtle, and nothing here is for the network.
@@ -57,11 +57,11 @@ if (new URL(SITE).hostname !== '127.0.0.1') {
   console.error(`URL must be served on 127.0.0.1 (python3 -m http.server <port> --bind 127.0.0.1), not ${SITE}`);
   process.exit(2);
 }
-const BASE = SITE + 'star-hunt/';
-const PAGES_URL = 'https://brentcross.github.io/brent_cross/star-hunt/';   // what QR codes point at when served locally
+const BASE = SITE + 'for-unto-us/';
+const PAGES_URL = 'https://brentcross.github.io/Christmas2026/for-unto-us/';   // what QR codes point at when served locally
 const GAME = 'for-unto-us-2026';
-const ME_KEY = 'star-hunt:me:' + GAME;
-const OUT = resolve(process.argv[2] || join(tmpdir(), 'star-hunt-test'));
+const ME_KEY = 'for-unto-us:me:' + GAME;
+const OUT = resolve(process.argv[2] || join(tmpdir(), 'for-unto-us-test'));
 mkdirSync(OUT, { recursive: true });
 
 let failures = 0, checks = 0;
@@ -74,15 +74,15 @@ function expect(cond, msg) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- the hunt: unsealed with the MC passphrase ----------
-const PASS = process.env.STAR_HUNT_PASSPHRASE || '';
+const PASS = process.env.FOR_UNTO_US_PASSPHRASE || '';
 if (!PASS.trim()) {
-  console.error('Set STAR_HUNT_PASSPHRASE to the MC passphrase: this test unseals star-hunt/hunt.sealed.js to know the codes and answers.');
+  console.error('Set FOR_UNTO_US_PASSPHRASE to the MC passphrase: this test unseals for-unto-us/hunt.sealed.js to know the codes and answers.');
   process.exit(2);
 }
-const SEALED = T.parseSealedJs(readFileSync(join(ROOT, 'star-hunt/hunt.sealed.js'), 'utf8'));
+const SEALED = T.parseSealedJs(readFileSync(join(ROOT, 'for-unto-us/hunt.sealed.js'), 'utf8'));
 const MC_COPY = await T.openMC(SEALED, PASS);
 if (!MC_COPY) {
-  console.error('STAR_HUNT_PASSPHRASE does not open star-hunt/hunt.sealed.js.');
+  console.error('FOR_UNTO_US_PASSPHRASE does not open for-unto-us/hunt.sealed.js.');
   process.exit(2);
 }
 const H = MC_COPY.hunt;
@@ -254,9 +254,9 @@ async function newContext(kind, online) {
     (/firebaseio\.com|firebasedatabase\.app/.test(url) ? firebaseHits : outsideHits).push(url);
     return r.abort();
   });
-  await ctx.route(u => /\/star-hunt\/config\.js/.test(u.pathname), r => r.fulfill({
+  await ctx.route(u => /\/for-unto-us\/config\.js/.test(u.pathname), r => r.fulfill({
     contentType: 'text/javascript',
-    body: `window.STAR_HUNT_CONFIG = { firebaseUrl: ${online ? `'${DB_ORIGIN}/${ctx.dev}'` : "''"}, gameId: '${GAME}' };`,
+    body: `window.FOR_UNTO_US_CONFIG = { firebaseUrl: ${online ? `'${DB_ORIGIN}/${ctx.dev}'` : "''"}, gameId: '${GAME}' };`,
   }));
   return ctx;
 }
@@ -490,8 +490,8 @@ async function servedFilesCheck() {
   console.log('\n=== Served files: no secret anywhere ===');
   const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(d => d.isDirectory() ? walk(join(dir, d.name)) : [join(dir, d.name)]);
   const rel = f => relative(ROOT, f).split(sep).join('/');
-  // Everything the deploy workflow publishes: the star-hunt folder plus the root app files.
-  const files = walk(join(ROOT, 'star-hunt')).map(rel);
+  // Everything the deploy workflow publishes: the for-unto-us folder plus the root app files.
+  const files = walk(join(ROOT, 'for-unto-us')).map(rel);
   for (const f of ['index.html', 'manifest.webmanifest', 'sw.js']) if (existsSync(join(ROOT, f))) files.push(f);
   if (existsSync(join(ROOT, 'icons'))) files.push(...walk(join(ROOT, 'icons')).map(rel));
   // A file leaks a secret when its text, read as is or with HTML entities and JavaScript escapes undone, holds it.

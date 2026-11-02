@@ -10,9 +10,9 @@
 <title>MC console · For Unto Us</title>
 <!-- 1. version.js always loads fresh; 2. everything else loads with ?v=<build> -->
 <script>document.write('<script src="version.js?t=' + Date.now() + '"><\/script>');</script>
-<script>StarHuntLoad(['css/tokens.css', 'css/base.css', 'css/mc.css',
+<script>ForUntoUsLoad(['css/tokens.css', 'css/base.css', 'css/mc.css',
   'config.js', 'hunt.sealed.js', 'seal.js', 'store.js']);
-document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('img/star.svg') + '">');</script>
+document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('img/star.svg') + '">');</script>
 </head>
 <body>
 <div class="offline" id="offline" role="status" hidden>Reconnecting…</div>
@@ -30,7 +30,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('i
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const cssKey = k => '[data-key="' + String(k).replace(/["\\]/g, '\\$&') + '"]';
-  const OPEN_KEY = 'star-hunt:mc:open:' + S.gameId;
+  const OPEN_KEY = 'for-unto-us:mc:open:' + S.gameId;
 
   // The four things the MC can release for each clue, in the order phones show them.
   const KINDS = [

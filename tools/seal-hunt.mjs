@@ -2,17 +2,17 @@
 // Seal and unseal the "For Unto Us" hunt.
 //
 // The plaintext hunt lives in hunt-private/hunt.json (git-ignored, never served). This tool turns it
-// into star-hunt/hunt.sealed.js, which is safe to commit to the public repo: apart from a few public
+// into for-unto-us/hunt.sealed.js, which is safe to commit to the public repo: apart from a few public
 // fields (title, intro, the verse phrases, ...) everything is AES-256-GCM encrypted.
 //
-//   node tools/seal-hunt.mjs seal   [--in hunt-private/hunt.json] [--out star-hunt/hunt.sealed.js]
-//                                   [--new-codes] [--new-start-key] [--stamp star-hunt/version.js | --no-stamp]
+//   node tools/seal-hunt.mjs seal   [--in hunt-private/hunt.json] [--out for-unto-us/hunt.sealed.js]
+//                                   [--new-codes] [--new-start-key] [--stamp for-unto-us/version.js | --no-stamp]
 //                                   [--force] [--allow-weak]
-//   node tools/seal-hunt.mjs unseal [--in star-hunt/hunt.sealed.js] [--out hunt-private/hunt.json | -] [--force]
+//   node tools/seal-hunt.mjs unseal [--in for-unto-us/hunt.sealed.js] [--out hunt-private/hunt.json | -] [--force]
 //   node tools/seal-hunt.mjs new-passphrase [--words 5]
-//   node tools/seal-hunt.mjs stamp  [--stamp star-hunt/version.js]
+//   node tools/seal-hunt.mjs stamp  [--stamp for-unto-us/version.js]
 //
-// seal and unseal read the MC passphrase from the environment variable STAR_HUNT_PASSPHRASE.
+// seal and unseal read the MC passphrase from the environment variable FOR_UNTO_US_PASSPHRASE.
 //
 // seal refuses (unless told otherwise) to:
 //   - replace an --out file that was sealed with a different passphrase (--force replaces it; the sample hunt,
@@ -38,7 +38,7 @@
 //           console writes the start key (base64) to meta/startKey when the hunt starts.
 //   mc      { kdf: 'PBKDF2-SHA256', iterations: 600000, salt, iv, ct } -> { hunt, startKey }: the whole
 //           private JSON plus the start key, sealed with PBKDF2-HMAC-SHA256(normalized passphrase) -> 32-byte key.
-// star-hunt/seal.js does the same in the browser; tools/seal-test.mjs proves the two agree.
+// for-unto-us/seal.js does the same in the browser; tools/seal-test.mjs proves the two agree.
 //
 // No dependencies: Node 22's built-in WebCrypto (the same API the browser uses).
 
@@ -66,14 +66,14 @@ export const PUBLIC_FIELDS = ['title', 'subtitle', 'intro', 'decoyMessage', 'not
 export const FIXTURE_PATH = resolve(ROOT, 'tools/fixtures/sample-hunt.json');
 export const TEST_PASSPHRASE = 'test-passphrase';
 export const MIN_PASSPHRASE = 16;
-// Card codes that are public: the old plaintext star-hunt/hunt.js (in the repo's history) printed these.
+// Card codes that are public: the old plaintext for-unto-us/hunt.js (in the repo's history) printed these.
 // The sample hunt's codes are public too (see publicCodes).
 export const OLD_PUBLIC_CODES = ['DJQGW6', 'GUWAQY', 'YRN455', 'Z6V3FF', 'VKSKH3', '9VHFH9', '4XYZCK', 'AFYV5G',
   'GQJ7CJ', 'MFPWUZ', 'M7W7HB', 'BKFQDK', 'KYZ359'];
 const PAD_BLOCK = 256;
 const roundUp = n => Math.ceil(n / PAD_BLOCK) * PAD_BLOCK;
 
-// ---------- encodings (must match star-hunt/seal.js) ----------
+// ---------- encodings (must match for-unto-us/seal.js) ----------
 const utf8 = s => new TextEncoder().encode(s);
 const b64 = bytes => Buffer.from(bytes).toString('base64');
 const unb64 = s => new Uint8Array(Buffer.from(s, 'base64'));
@@ -117,7 +117,7 @@ async function unseal(key, box) {
   } catch { return null; }
 }
 
-// ---------- opening (the same three operations star-hunt/seal.js offers) ----------
+// ---------- opening (the same three operations for-unto-us/seal.js offers) ----------
 // openCard(sealed, code) -> { kind: 'station', n, ... } | { kind: 'decoy' } | null
 export async function openCard(sealed, code) {
   const c = normCode(code);
@@ -293,17 +293,17 @@ export const buildStamp = (d = new Date()) => d.toISOString().replace(/[-:]/g, '
 export const versionJs = stamp => `// Build stamp for cache-busting. Written by \`node tools/seal-hunt.mjs seal\` (or \`stamp\`); do not edit.
 // Pages load this file fresh (version.js?t=<now>) and every other file with ?v=<build>, so a phone never
 // mixes cached old files with new ones. See the head snippet in the screen builders' API notes.
-window.STAR_HUNT_BUILD = '${stamp}';
-// StarHuntAsset('art/x.jpg') -> 'art/x.jpg?v=<build>'
-window.StarHuntAsset = function (path) {
+window.FOR_UNTO_US_BUILD = '${stamp}';
+// ForUntoUsAsset('art/x.jpg') -> 'art/x.jpg?v=<build>'
+window.ForUntoUsAsset = function (path) {
   path = String(path);
-  return path + (path.indexOf('?') < 0 ? '?' : '&') + 'v=' + encodeURIComponent(window.STAR_HUNT_BUILD);
+  return path + (path.indexOf('?') < 0 ? '?' : '&') + 'v=' + encodeURIComponent(window.FOR_UNTO_US_BUILD);
 };
-// StarHuntLoad(['css/base.css', 'config.js', ...]) writes the <link> and <script> tags in this order.
+// ForUntoUsLoad(['css/base.css', 'config.js', ...]) writes the <link> and <script> tags in this order.
 // Call it from an inline <script> in <head> while the page is still loading.
-window.StarHuntLoad = function (paths) {
+window.ForUntoUsLoad = function (paths) {
   for (var i = 0; i < paths.length; i++) {
-    var url = window.StarHuntAsset(paths[i]).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    var url = window.ForUntoUsAsset(paths[i]).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
     document.write(/\\.css$/.test(paths[i]) ? '<link rel="stylesheet" href="' + url + '">' : '<script src="' + url + '"><\\/script>');
   }
 };
@@ -438,8 +438,8 @@ const exists = p => access(p).then(() => true, () => false);
 const rel = p => relative(process.cwd(), p) || p;
 const say = msg => process.stderr.write(msg + '\n');
 function passphraseFromEnv() {
-  const p = process.env.STAR_HUNT_PASSPHRASE;
-  if (!p || !normPassphrase(p)) throw new Error('Set the MC passphrase in the environment variable STAR_HUNT_PASSPHRASE.');
+  const p = process.env.FOR_UNTO_US_PASSPHRASE;
+  if (!p || !normPassphrase(p)) throw new Error('Set the MC passphrase in the environment variable FOR_UNTO_US_PASSPHRASE.');
   return p;
 }
 // Codes anyone can read: the sample hunt's and the old plaintext hunt's.
@@ -460,7 +460,7 @@ async function writeVersion(path) {
 
 async function cmdSeal(o) {
   const inPath = resolve(o.in || resolve(ROOT, 'hunt-private/hunt.json'));
-  const outPath = resolve(o.out || resolve(ROOT, 'star-hunt/hunt.sealed.js'));
+  const outPath = resolve(o.out || resolve(ROOT, 'for-unto-us/hunt.sealed.js'));
   const passphrase = passphraseFromEnv();
   const isSample = inPath === FIXTURE_PATH;
   const pass = normPassphrase(passphrase);
@@ -519,13 +519,13 @@ async function cmdSeal(o) {
     ? 'Start key: kept from the previous sealed file. If the MC has ever pressed Start with this key (a rehearsal),\n  it has been public in the database: seal again with --new-start-key before the real game.'
     : 'Start key: new. A game that has already started needs the MC console\'s "Republish" (or Start) again.');
   if (!o['no-stamp']) {
-    const vPath = resolve(o.stamp || resolve(ROOT, 'star-hunt/version.js'));
+    const vPath = resolve(o.stamp || resolve(ROOT, 'for-unto-us/version.js'));
     say(`Build ${await writeVersion(vPath)} written to ${rel(vPath)}.`);
   }
 }
 
 async function cmdUnseal(o) {
-  const inPath = resolve(o.in || resolve(ROOT, 'star-hunt/hunt.sealed.js'));
+  const inPath = resolve(o.in || resolve(ROOT, 'for-unto-us/hunt.sealed.js'));
   const out = o.out || resolve(ROOT, 'hunt-private/hunt.json');
   const sealed = parseSealedJs(await readFile(inPath, 'utf8'));
   const mc = await openMC(sealed, passphraseFromEnv());
@@ -544,12 +544,12 @@ async function cmdUnseal(o) {
 }
 
 const USAGE = `Usage:
-  STAR_HUNT_PASSPHRASE=... node tools/seal-hunt.mjs seal   [--in hunt-private/hunt.json] [--out star-hunt/hunt.sealed.js]
-                                                           [--new-codes] [--new-start-key] [--stamp star-hunt/version.js | --no-stamp]
+  FOR_UNTO_US_PASSPHRASE=... node tools/seal-hunt.mjs seal   [--in hunt-private/hunt.json] [--out for-unto-us/hunt.sealed.js]
+                                                           [--new-codes] [--new-start-key] [--stamp for-unto-us/version.js | --no-stamp]
                                                            [--force] [--allow-weak]
-  STAR_HUNT_PASSPHRASE=... node tools/seal-hunt.mjs unseal [--in star-hunt/hunt.sealed.js] [--out hunt-private/hunt.json | -] [--force]
+  FOR_UNTO_US_PASSPHRASE=... node tools/seal-hunt.mjs unseal [--in for-unto-us/hunt.sealed.js] [--out hunt-private/hunt.json | -] [--force]
   node tools/seal-hunt.mjs new-passphrase [--words 5]
-  node tools/seal-hunt.mjs stamp [--stamp star-hunt/version.js]`;
+  node tools/seal-hunt.mjs stamp [--stamp for-unto-us/version.js]`;
 
 async function main(argv) {
   const o = parseArgs(argv);
@@ -558,7 +558,7 @@ async function main(argv) {
   if (cmd === 'unseal') return cmdUnseal(o);
   if (cmd === 'new-passphrase') { process.stdout.write(newPassphrase(Number(o.words) || 5) + '\n'); return; }
   if (cmd === 'stamp') {
-    const vPath = resolve(o.stamp || resolve(ROOT, 'star-hunt/version.js'));
+    const vPath = resolve(o.stamp || resolve(ROOT, 'for-unto-us/version.js'));
     say(`Build ${await writeVersion(vPath)} written to ${rel(vPath)}.`);
     return;
   }

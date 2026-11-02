@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// Tests for the sealed hunt: tools/seal-hunt.mjs (Node) and star-hunt/seal.js (the browser, in Chromium).
+// Tests for the sealed hunt: tools/seal-hunt.mjs (Node) and for-unto-us/seal.js (the browser, in Chromium).
 //
 //   node tools/seal-test.mjs                  everything, using the sample hunt in tools/fixtures/
 //   node tools/seal-test.mjs --skip-browser   without Chromium
-//   STAR_HUNT_PASSPHRASE=... node tools/seal-test.mjs
-//                                             also checks the real star-hunt/hunt.sealed.js the same way (and
+//   FOR_UNTO_US_PASSPHRASE=... node tools/seal-test.mjs
+//                                             also checks the real for-unto-us/hunt.sealed.js the same way (and
 //                                             that it matches hunt-private/hunt.json when that file exists);
 //                                             fails if that passphrase doesn't open it
-//   node tools/seal-test.mjs --release        (or STAR_HUNT_RELEASE=1) before a real deploy: also fails if
-//                                             star-hunt/hunt.sealed.js is still the sample (opens with the test
+//   node tools/seal-test.mjs --release        (or FOR_UNTO_US_RELEASE=1) before a real deploy: also fails if
+//                                             for-unto-us/hunt.sealed.js is still the sample (opens with the test
 //                                             passphrase) or any public card code (the sample's, the old
 //                                             hunt.js's) opens one of its cards
 //
@@ -16,7 +16,7 @@
 // that one; wrong codes open nothing; clue 1 opens only with the start key; the MC copy opens only with the
 // passphrase; no secret text (codes, hiding spots, answers, solutions, hints, little-ones lines, riddles,
 // station titles, stories, scriptures, ponder lines, task prompts) appears anywhere in the sealed file;
-// entries are shuffled; and star-hunt/seal.js in Chromium derives the same ids and opens the same data
+// entries are shuffled; and for-unto-us/seal.js in Chromium derives the same ids and opens the same data
 // as the Node tool, byte for byte.
 //
 // The browser part needs `playwright` importable from the repo (symlink a node_modules folder into the
@@ -35,11 +35,11 @@ import * as T from './seal-hunt.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURE = join(ROOT, 'tools/fixtures/sample-hunt.json');
 const FIXTURE_SEALED = join(ROOT, 'tools/fixtures/sample-hunt.sealed.js');
-const SITE_SEALED = join(ROOT, 'star-hunt/hunt.sealed.js');
+const SITE_SEALED = join(ROOT, 'for-unto-us/hunt.sealed.js');
 const TOOL = join(ROOT, 'tools/seal-hunt.mjs');
 const TEST_PASS = 'test-passphrase';
 const skipBrowser = process.argv.includes('--skip-browser');
-const releaseCheck = process.argv.includes('--release') || process.env.STAR_HUNT_RELEASE === '1';
+const releaseCheck = process.argv.includes('--release') || process.env.FOR_UNTO_US_RELEASE === '1';
 const STRONG = 'candle-river-lamp-meadow-violin';   // a throwaway strong passphrase for the command-line tests
 const subtle = globalThis.crypto.subtle;
 
@@ -188,7 +188,7 @@ async function checkSealed(label, text, passphrase, expectedHunt) {
 
 // ---------- tests ----------
 const fixture = await readJson(FIXTURE);
-const runTool = (args, env = {}) => spawnSync(process.execPath, [TOOL, ...args], { encoding: 'utf8', env: { ...process.env, STAR_HUNT_PASSPHRASE: TEST_PASS, ...env } });
+const runTool = (args, env = {}) => spawnSync(process.execPath, [TOOL, ...args], { encoding: 'utf8', env: { ...process.env, FOR_UNTO_US_PASSPHRASE: TEST_PASS, ...env } });
 
 section('word list, passphrases, codes, validation');
 expect(T.WORDS.length >= 1000, `the passphrase word list has ${T.WORDS.length} words (at least 1,000)`);
@@ -231,15 +231,15 @@ try {
   const noCodes = structuredClone(fixture);
   for (const s of [...noCodes.stations, ...noCodes.decoys]) delete s.code;
   const hPath = join(tmp, 'hunt.json'), sPath = join(tmp, 'hunt.sealed.js'), backPath = join(tmp, 'back.json'), vPath = join(tmp, 'version.js');
-  const P = { STAR_HUNT_PASSPHRASE: STRONG };
+  const P = { FOR_UNTO_US_PASSPHRASE: STRONG };
   await writeFile(hPath, JSON.stringify(noCodes, null, 2) + '\n');
   let r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp'], P);
   expect(r.status === 1 && /no "code"/.test(r.stderr), 'seal refuses a hunt without codes (and says to use --new-codes)');
-  r = runTool(['seal', '--in', hPath, '--out', sPath, '--stamp', vPath], { STAR_HUNT_PASSPHRASE: '' });
-  expect(r.status === 1 && /STAR_HUNT_PASSPHRASE/.test(r.stderr), 'seal refuses to run without STAR_HUNT_PASSPHRASE');
-  r = runTool(['seal', '--in', hPath, '--out', sPath, '--new-codes', '--no-stamp'], { STAR_HUNT_PASSPHRASE: TEST_PASS });
+  r = runTool(['seal', '--in', hPath, '--out', sPath, '--stamp', vPath], { FOR_UNTO_US_PASSPHRASE: '' });
+  expect(r.status === 1 && /FOR_UNTO_US_PASSPHRASE/.test(r.stderr), 'seal refuses to run without FOR_UNTO_US_PASSPHRASE');
+  r = runTool(['seal', '--in', hPath, '--out', sPath, '--new-codes', '--no-stamp'], { FOR_UNTO_US_PASSPHRASE: TEST_PASS });
   expect(r.status === 1 && /public test passphrase/.test(r.stderr) && !existsSync(sPath), 'seal refuses the public test passphrase for a real hunt');
-  r = runTool(['seal', '--in', hPath, '--out', sPath, '--new-codes', '--no-stamp'], { STAR_HUNT_PASSPHRASE: 'short pass' });
+  r = runTool(['seal', '--in', hPath, '--out', sPath, '--new-codes', '--no-stamp'], { FOR_UNTO_US_PASSPHRASE: 'short pass' });
   expect(r.status === 1 && /shorter than 16/.test(r.stderr) && !existsSync(sPath), 'seal refuses a passphrase under 16 characters');
   expect(isDeepStrictEqual(await readJson(hPath), noCodes), 'a refused seal leaves the private file alone (no codes written)');
   r = runTool(['seal', '--in', hPath, '--out', sPath, '--new-codes', '--stamp', vPath], P);
@@ -268,7 +268,7 @@ try {
   expect(r.status === 0 && isDeepStrictEqual(await readJson(backPath), withCodes), 'unseal --force overwrites it');
   r = runTool(['unseal', '--in', sPath, '--out', '-'], P);
   expect(r.status === 0 && isDeepStrictEqual(JSON.parse(r.stdout), withCodes), 'unseal --out - prints the hunt');
-  r = runTool(['unseal', '--in', sPath, '--out', '-'], { STAR_HUNT_PASSPHRASE: 'not-the-passphrase' });
+  r = runTool(['unseal', '--in', sPath, '--out', '-'], { FOR_UNTO_US_PASSPHRASE: 'not-the-passphrase' });
   expect(r.status === 1 && !r.stdout, 'unseal with the wrong passphrase fails and prints nothing');
 
   r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp'], P);
@@ -287,14 +287,14 @@ try {
   section('command line: refusals that protect a sealed hunt');
   const before = await readFile(sPath, 'utf8');
   const OTHER = 'otter-lantern-pocket-summit-violet';
-  r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp', '--new-codes'], { STAR_HUNT_PASSPHRASE: OTHER });
+  r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp', '--new-codes'], { FOR_UNTO_US_PASSPHRASE: OTHER });
   expect(r.status === 1 && /different passphrase; add --force/.test(r.stderr) && (await readFile(sPath, 'utf8')) === before && isDeepStrictEqual(await readJson(hPath), withCodes),
     'seal will not replace a hunt sealed with a different passphrase (and writes no new codes)');
   r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp', '--new-codes'], P);
   const withCodes2 = await readJson(hPath);
   expect(r.status === 0 && /WARNING: --new-codes/.test(r.stderr) && /Print the cards again/.test(r.stderr) && withCodes2.stations[0].code !== withCodes.stations[0].code,
     '--new-codes over a sealed hunt that opens prints a loud warning about printed cards and progress');
-  r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp', '--force'], { STAR_HUNT_PASSPHRASE: OTHER });
+  r = runTool(['seal', '--in', hPath, '--out', sPath, '--no-stamp', '--force'], { FOR_UNTO_US_PASSPHRASE: OTHER });
   expect(r.status === 0 && (await T.openMC(T.parseSealedJs(await readFile(sPath, 'utf8')), OTHER)) !== null, '--force replaces it');
   const samplePath = join(tmp, 'site.sealed.js');
   await writeFile(samplePath, committedText);
@@ -314,7 +314,7 @@ try {
   await writeFile(copyPath, JSON.stringify(oldCodes, null, 2) + '\n');
   r = runTool(['seal', '--in', copyPath, '--out', join(tmp, 'copy.sealed.js'), '--no-stamp'], P);
   expect(r.status === 1 && /decoy 1/.test(r.stderr) && /is public/.test(r.stderr), 'seal refuses a code from the old public hunt.js');
-  r = runTool(['seal', '--in', copyPath, '--out', join(tmp, 'copy.sealed.js'), '--no-stamp', '--allow-weak'], { STAR_HUNT_PASSPHRASE: 'short pass' });
+  r = runTool(['seal', '--in', copyPath, '--out', join(tmp, 'copy.sealed.js'), '--no-stamp', '--allow-weak'], { FOR_UNTO_US_PASSPHRASE: 'short pass' });
   expect(r.status === 1 && /is public/.test(r.stderr), '--allow-weak does not allow public codes');
   const noDecoys = structuredClone(withCodes2); delete noDecoys.decoys;
   expect(T.validateHunt(noDecoys).warnings.some(w => /no Herod cards/.test(w)), 'validation warns when the hunt has no decoys');
@@ -325,60 +325,60 @@ try {
   const written = [];
   const ctx = { window: {}, document: { write: s => written.push(s) }, encodeURIComponent };
   vm.runInNewContext(vText, ctx);
-  const stamp = ctx.window.STAR_HUNT_BUILD;
-  expect(/^\d{8}T\d{6}Z$/.test(stamp), `version.js sets STAR_HUNT_BUILD (${stamp})`);
-  expect(ctx.window.StarHuntAsset('art/a.jpg') === `art/a.jpg?v=${stamp}` && ctx.window.StarHuntAsset('x.js?a=1') === `x.js?a=1&v=${stamp}`, 'StarHuntAsset appends ?v=<build>');
-  ctx.window.StarHuntLoad(['css/base.css', 'config.js']);
-  expect(written[0] === `<link rel="stylesheet" href="css/base.css?v=${stamp}">` && written[1] === `<script src="config.js?v=${stamp}"></script>`, 'StarHuntLoad writes the link and script tags in order');
+  const stamp = ctx.window.FOR_UNTO_US_BUILD;
+  expect(/^\d{8}T\d{6}Z$/.test(stamp), `version.js sets FOR_UNTO_US_BUILD (${stamp})`);
+  expect(ctx.window.ForUntoUsAsset('art/a.jpg') === `art/a.jpg?v=${stamp}` && ctx.window.ForUntoUsAsset('x.js?a=1') === `x.js?a=1&v=${stamp}`, 'ForUntoUsAsset appends ?v=<build>');
+  ctx.window.ForUntoUsLoad(['css/base.css', 'config.js']);
+  expect(written[0] === `<link rel="stylesheet" href="css/base.css?v=${stamp}">` && written[1] === `<script src="config.js?v=${stamp}"></script>`, 'ForUntoUsLoad writes the link and script tags in order');
   r = runTool(['stamp', '--stamp', vPath]);
-  expect(r.status === 0 && /window\.STAR_HUNT_BUILD = '\d{8}T\d{6}Z'/.test(await readFile(vPath, 'utf8')), 'the stamp command rewrites version.js');
+  expect(r.status === 0 && /window\.FOR_UNTO_US_BUILD = '\d{8}T\d{6}Z'/.test(await readFile(vPath, 'utf8')), 'the stamp command rewrites version.js');
 } finally {
   await rm(tmp, { recursive: true, force: true });
 }
 
 // 4. The site's sealed hunt.
-section('star-hunt/hunt.sealed.js');
+section('for-unto-us/hunt.sealed.js');
 if (existsSync(SITE_SEALED)) {
-  const v = await readFile(join(ROOT, 'star-hunt/version.js'), 'utf8').catch(() => '');
-  expect(/window\.STAR_HUNT_BUILD = '\d{8}T\d{6}Z'/.test(v), 'star-hunt/version.js has a build stamp');
+  const v = await readFile(join(ROOT, 'for-unto-us/version.js'), 'utf8').catch(() => '');
+  expect(/window\.FOR_UNTO_US_BUILD = '\d{8}T\d{6}Z'/.test(v), 'for-unto-us/version.js has a build stamp');
   const siteText = await readFile(SITE_SEALED, 'utf8');
   const site = T.parseSealedJs(siteText);
-  const envPass = process.env.STAR_HUNT_PASSPHRASE;
+  const envPass = process.env.FOR_UNTO_US_PASSPHRASE;
   const privatePath = join(ROOT, 'hunt-private/hunt.json');
   const isSample = !!(await T.openMC(site, TEST_PASS));
   if (envPass) {
     const opened = await T.openMC(site, envPass);
-    if (expect(opened, 'STAR_HUNT_PASSPHRASE opens star-hunt/hunt.sealed.js')) {
+    if (expect(opened, 'FOR_UNTO_US_PASSPHRASE opens for-unto-us/hunt.sealed.js')) {
       const priv = existsSync(privatePath) ? await readJson(privatePath) : null;
       if (!priv) console.log('   note: hunt-private/hunt.json is not here, so the sealed hunt is checked on its own');
-      await checkSealed('star-hunt/hunt.sealed.js', siteText, envPass, priv);
+      await checkSealed('for-unto-us/hunt.sealed.js', siteText, envPass, priv);
     }
   } else if (isSample) {
-    console.log('   note: star-hunt/hunt.sealed.js is still the sample hunt (sealed with the test passphrase)');
-    await checkSealed('star-hunt/hunt.sealed.js (sample)', siteText, TEST_PASS, fixture);
+    console.log('   note: for-unto-us/hunt.sealed.js is still the sample hunt (sealed with the test passphrase)');
+    await checkSealed('for-unto-us/hunt.sealed.js (sample)', siteText, TEST_PASS, fixture);
   } else {
-    console.log('   skip: set STAR_HUNT_PASSPHRASE to check star-hunt/hunt.sealed.js');
+    console.log('   skip: set FOR_UNTO_US_PASSPHRASE to check for-unto-us/hunt.sealed.js');
   }
   if (releaseCheck) {
-    section('release: star-hunt/hunt.sealed.js is the real hunt');
-    expect(!isSample, 'star-hunt/hunt.sealed.js is not the sample hunt (it does not open with the test passphrase)');
+    section('release: for-unto-us/hunt.sealed.js is the real hunt');
+    expect(!isSample, 'for-unto-us/hunt.sealed.js is not the sample hunt (it does not open with the test passphrase)');
     const pub = [...(await T.publicCodes())];
     const openers = [];
     for (const c of pub) if (await T.openCard(site, c)) openers.push(c);
     expect(!openers.length, `none of the ${pub.length} public card codes (sample, old hunt.js) opens a card${openers.length ? ': ' + openers.length + ' do' : ''}`);
-    expect(!!envPass, 'STAR_HUNT_PASSPHRASE is set, so the real hunt was checked above');
+    expect(!!envPass, 'FOR_UNTO_US_PASSPHRASE is set, so the real hunt was checked above');
   }
 } else {
-  console.log('skip: star-hunt/hunt.sealed.js does not exist yet');
-  if (releaseCheck) expect(false, 'release: star-hunt/hunt.sealed.js exists');
+  console.log('skip: for-unto-us/hunt.sealed.js does not exist yet');
+  if (releaseCheck) expect(false, 'release: for-unto-us/hunt.sealed.js exists');
 }
 
-// 5. The browser: star-hunt/seal.js in Chromium against the committed sample.
+// 5. The browser: for-unto-us/seal.js in Chromium against the committed sample.
 if (skipBrowser) { section(''); console.log('skip: browser interop (--skip-browser)'); }
 else await browserInterop();
 
 async function browserInterop() {
-  section('browser interop: star-hunt/seal.js in Chromium');
+  section('browser interop: for-unto-us/seal.js in Chromium');
   let chromium;
   try { ({ chromium } = await import('playwright')); }
   catch { expect(false, 'playwright is importable (symlink node_modules into the repo root, or pass --skip-browser)'); return; }
@@ -395,10 +395,10 @@ async function browserInterop() {
   const files = {
     '/': `<!doctype html><meta charset="utf-8"><title>seal test</title>
 <script>document.write('<script src="version.js?t=' + Date.now() + '"><\\/script>');</script>
-<script>StarHuntLoad(['hunt.sealed.js', 'seal.js']);</script>`,
+<script>ForUntoUsLoad(['hunt.sealed.js', 'seal.js']);</script>`,
     '/version.js': T.versionJs(stamp),
     '/hunt.sealed.js': committedText,
-    '/seal.js': await readFile(join(ROOT, 'star-hunt/seal.js'), 'utf8'),
+    '/seal.js': await readFile(join(ROOT, 'for-unto-us/seal.js'), 'utf8'),
   };
   const requested = [];
   const server = http.createServer((req, res) => {

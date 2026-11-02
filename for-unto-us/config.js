@@ -7,7 +7,7 @@
 //
 // gameId: change it to start a brand-new game with nobody registered (for example each year).
 // The game lives at games/<gameId> in the database.
-window.STAR_HUNT_CONFIG = {
+window.FOR_UNTO_US_CONFIG = {
   firebaseUrl: 'https://christmas-party-66352-default-rtdb.firebaseio.com',
   gameId: 'for-unto-us-2026',
 };

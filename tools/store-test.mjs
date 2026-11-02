@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Tests for star-hunt/store.js (window.StarStore) in Chromium, against a small stand-in for the Firebase
+// Tests for for-unto-us/store.js (window.StarStore) in Chromium, against a small stand-in for the Firebase
 // Realtime Database REST API (PUT / PATCH / DELETE / GET and the live EventSource stream), and in demo mode.
 //
 //   node tools/store-test.mjs
@@ -136,12 +136,12 @@ const fb = http.createServer((req, res) => {
 const sealedText = await readFile(SEALED, 'utf8');
 const site = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
-  if (u.pathname === '/star-hunt/blank.html') {
+  if (u.pathname === '/for-unto-us/blank.html') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     return res.end('<!doctype html><meta charset="utf-8"><title>store test</title>' +
       ['config.js', 'hunt.sealed.js', 'seal.js', 'store.js'].map(f => `<script src="${f}"></script>`).join(''));
   }
-  if (u.pathname === '/star-hunt/hunt.sealed.js') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(sealedText); }
+  if (u.pathname === '/for-unto-us/hunt.sealed.js') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(sealedText); }
   try {
     const b = await readFile(join(ROOT, u.pathname));
     res.writeHead(200, { 'Content-Type': 'text/javascript' }); res.end(b);
@@ -165,14 +165,14 @@ let hostN = 1;
 async function device({ online = true, asleepAtLoad = false } = {}) {
   const ctx = await browser.newContext();
   const host = '127.0.0.' + (++hostN);
-  await ctx.route(u => new URL(u).pathname === '/star-hunt/config.js', r => r.fulfill({
+  await ctx.route(u => new URL(u).pathname === '/for-unto-us/config.js', r => r.fulfill({
     contentType: 'text/javascript',
-    body: `window.STAR_HUNT_CONFIG = { firebaseUrl: ${online ? `'http://${host}:${FB_PORT}'` : "''"}, gameId: 'test' };`,
+    body: `window.FOR_UNTO_US_CONFIG = { firebaseUrl: ${online ? `'http://${host}:${FB_PORT}'` : "''"}, gameId: 'test' };`,
   }));
   const page = await ctx.newPage();
   page.on('pageerror', e => expect(false, `page error on ${host}: ${e.message}`));
   if (asleepAtLoad) asleep.add(host);
-  await page.goto(`http://${host}:${SITE_PORT}/star-hunt/blank.html`);
+  await page.goto(`http://${host}:${SITE_PORT}/for-unto-us/blank.html`);
   await page.waitForFunction(() => window.StarStore && window.HuntSeal);
   if (!asleepAtLoad) await page.waitForFunction(() => StarStore.loaded && StarStore.tree);
   page.host = host;

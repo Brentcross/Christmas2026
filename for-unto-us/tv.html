@@ -8,9 +8,9 @@
 <title>For Unto Us · TV</title>
 <!-- 1. version.js always loads fresh; 2. everything else loads with ?v=<build> -->
 <script>document.write('<script src="version.js?t=' + Date.now() + '"><\/script>');</script>
-<script>StarHuntLoad(['css/tokens.css', 'css/base.css', 'css/tv.css',
+<script>ForUntoUsLoad(['css/tokens.css', 'css/base.css', 'css/tv.css',
   'config.js', 'hunt.sealed.js', 'seal.js', 'store.js', 'qrcode.js']);
-  document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('img/star.svg') + '">');</script>
+  document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('img/star.svg') + '">');</script>
 </head>
 <body>
 <!-- The living-room screen. Everything is laid out in design px on a 1920 x 1080 stage that fit() scales.
@@ -150,7 +150,7 @@ addEventListener('resize', fit); fit();
   const N = H.stationCount || H.phrases.length;            // never hard-code 9
   const PH = H.phrases;
   const REF = (H.verse && H.verse.ref) || 'Isaiah 9:6';
-  const PAGES_URL = 'https://brentcross.github.io/brent_cross/star-hunt/';
+  const PAGES_URL = 'https://brentcross.github.io/Christmas2026/for-unto-us/';
   const RACE_MS = 45000, GIFTS_MS = 15000;                 // during the race, once a gift exists
   const FINALE_VERSE_MS = 20000, FINALE_GIFTS_MS = 40000;  // once everyone is at the manger
   const RELEASE_NAMES = { hint1: 'Hint 1', hint2: 'Hint 2', kids: 'Little ones clue' };
@@ -248,7 +248,7 @@ addEventListener('resize', fit); fit();
     document.querySelectorAll('.js-art').forEach(fig => {
       if (!c.src) { fig.classList.add('is-missing'); fig.innerHTML = '<div class="tv-art-fallback">' + STAR + '</div>'; return; }
       const who = [c.artist ? tx(c.artist) : '', c.title ? '<i>' + tx(c.title) + '</i>' : ''].filter(Boolean).join(', ');
-      fig.innerHTML = '<img src="' + esc(StarHuntAsset(c.src)) + '" width="' + (+c.w || 960) + '" height="' + (+c.h || 1052) + '" alt="">' +
+      fig.innerHTML = '<img src="' + esc(ForUntoUsAsset(c.src)) + '" width="' + (+c.w || 960) + '" height="' + (+c.h || 1052) + '" alt="">' +
         '<figcaption>' + (who ? who + ' (detail)' : '') + (c.credit ? '<span class="credit">' + tx(c.credit) + '</span>' : '') + '</figcaption>';
       fig.querySelector('img').addEventListener('error', () => {
         fig.classList.add('is-missing'); fig.innerHTML = '<div class="tv-art-fallback">' + STAR + '</div>';
@@ -697,10 +697,10 @@ addEventListener('resize', fit); fit();
   const layer = document.getElementById('howto'), v = document.getElementById('howto-video');
   function open() {
     if (!v.querySelector('source')) {
-      v.poster = StarHuntAsset('media/how-to-play-poster.jpg');
+      v.poster = ForUntoUsAsset('media/how-to-play-poster.jpg');
       // MP4 for Safari and most TVs; WebM for browsers without H.264.
       [['media/how-to-play.mp4', 'video/mp4'], ['media/how-to-play.webm', 'video/webm']].forEach(([src, type]) => {
-        const el = document.createElement('source'); el.src = StarHuntAsset(src); el.type = type; v.appendChild(el);
+        const el = document.createElement('source'); el.src = ForUntoUsAsset(src); el.type = type; v.appendChild(el);
       });
       v.load();
     }

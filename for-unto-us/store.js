@@ -55,7 +55,7 @@
 // Demo mode (no firebaseUrl in config.js) keeps the tree in localStorage and syncs the tabs of one browser.
 (function () {
   'use strict';
-  const cfg = window.STAR_HUNT_CONFIG || {};
+  const cfg = window.FOR_UNTO_US_CONFIG || {};
   const gameId = cfg.gameId || 'christmas';
   const firebaseUrl = (cfg.firebaseUrl || '').trim().replace(/\/+$/, '');
   const SERVER_TIME = { '.sv': 'timestamp' };
@@ -109,7 +109,7 @@
   function notify() { for (const fn of listeners) fn(tree, connected); }
 
   // ---------- demo mode (one browser) ----------
-  const LOCAL_KEY = 'star-hunt:db:' + gameId;
+  const LOCAL_KEY = 'for-unto-us:db:' + gameId;
   const channel = !firebaseUrl && 'BroadcastChannel' in window ? new BroadcastChannel(LOCAL_KEY) : null;
   function localRead() {
     try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || {}; } catch (e) { return {}; }
@@ -221,7 +221,7 @@
   //   made in), decide ('find'|'solve'|'start': first-time fields to settle against a fresh read), n, last,
   //   once (an MC write: one try only, never kept across a reload), quiet (not shown here before it is saved) }.
   // Only `done` (the caller's promise), `sending` and `sent` (the body that went out) live outside sessionStorage.
-  const QUEUE_KEY = 'star-hunt:outbox:' + gameId;
+  const QUEUE_KEY = 'for-unto-us:outbox:' + gameId;
   const SLOW_MS = 4000;      // a save not confirmed after this long counts in StarStore.pending
   const HOLD_MS = 15000;     // while progress is held for a pause, ask the server again this often (the stream may be down)
   let queue = [], pumping = false, pumpTimer = null, shownPending = 0;

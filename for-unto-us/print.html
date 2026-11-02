@@ -10,8 +10,8 @@
 <!-- 1. version.js always loads fresh; 2. everything else loads with ?v=<build>.
      This page needs no game state, so it loads neither config.js nor store.js (it never talks to the database). -->
 <script>document.write('<script src="version.js?t=' + Date.now() + '"><\/script>');</script>
-<script>StarHuntLoad(['css/tokens.css', 'css/base.css', 'css/print.css', 'hunt.sealed.js', 'seal.js', 'qrcode.js']);
-  document.write('<link rel="icon" type="image/svg+xml" href="' + StarHuntAsset('img/star.svg') + '">');</script>
+<script>ForUntoUsLoad(['css/tokens.css', 'css/base.css', 'css/print.css', 'hunt.sealed.js', 'seal.js', 'qrcode.js']);
+  document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('img/star.svg') + '">');</script>
 </head>
 <body>
 <!-- MC only. Nothing about the hunt is rendered until the MC passphrase opens the sealed copy. -->
@@ -66,7 +66,7 @@
   const Seal = window.HuntSeal;
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const PAGES_URL = 'https://brentcross.github.io/brent_cross/star-hunt/';
+  const PAGES_URL = 'https://brentcross.github.io/Christmas2026/for-unto-us/';
   const STAR = '<svg class="star" viewBox="-20 -20 40 40" aria-hidden="true"><path d="M0-20 2.3-2.3 15 0 2.3 2.3 0 20-2.3 2.3-15 0-2.3-2.3Z"/><path transform="rotate(45)" d="M0-9.5 1.4-1.4 9.5 0 1.4 1.4 0 9.5-1.4 1.4-9.5 0-1.4-1.4Z"/></svg>';
   let hunt = null;
 
