@@ -977,6 +977,10 @@ async function pauseEndReveal() {
   const rec = p => ((game().players || {})[p.pid]) || {};
   const nFound = p => run(rec(p).found).length, nSolved = p => run(rec(p).solved).length;
   expect(await until(mc, '5 joined'), 'MC: all five are listed');
+  // Gifts for Him can be added from the waiting screen, before the hunt starts.
+  await G.getByRole('textbox', { name: 'Add a gift for Him' }).fill('Pray every morning');
+  await G.getByRole('button', { name: 'Add', exact: true }).click();
+  expect(await until(G, 'Pray every morning') && await until(G, '1 added'), 'Grace: a gift added on the waiting screen, before the start');
   mc.answers.push(true);
   await mc.getByRole('button', { name: 'Start the hunt', exact: true }).click();
   for (const p of ph) expect(await until(p, ST[0].clue), `pause: clue 1 on ${p.devName}'s phone`);
@@ -1015,6 +1019,13 @@ async function pauseEndReveal() {
 
   // ----- phones while paused: no card opens, no task finishes -----
   for (const p of ph) expect(await until(p, 'The hunt is paused. Please wait for the MC.'), `${p.devName}: "The hunt is paused. Please wait for the MC."`);
+  for (const p of ph) {
+    const covers = await p.evaluate(() => {
+      const l = document.getElementById('paused-bar'), r = l && !l.hidden ? l.getBoundingClientRect() : null;
+      return !!r && getComputedStyle(l).position === 'fixed' && r.width >= innerWidth - 1 && r.height >= innerHeight - 1;
+    });
+    expect(covers && await until(p, 'Be still, and know that I am God') && await until(p, 'Phones down for now'), `${p.devName}: the paused layer covers the whole screen`);
+  }
   const gSolved = nSolved(G), dFound = nFound(D);
   {
     const held = await G.evaluate(() => [...document.querySelectorAll('#task-body button, #task-body input, #next-btn')].map(e => e.disabled));
@@ -1035,12 +1046,11 @@ async function pauseEndReveal() {
     const field = D.getByRole('textbox', { name: 'Card code' });
     expect(await field.isDisabled() && await D.getByRole('button', { name: 'Open', exact: true }).isDisabled(), 'Dad: the code field and Open are held');
     await scan(D, ST[1].code);   // the card's link from the camera
-    expect(await until(D, 'Scan this card again once the hunt goes on') && await until(D, 'The hunt is paused'), 'Dad: a card scanned while paused is refused with the paused message');
+    expect(await until(D, 'Scan this card again once the hunt goes on') && await until(D, 'The hunt is paused'), 'Dad: a card scanned while paused is refused on the paused layer');
     expect(!(await txt(D)).includes(N(ST[1].title)), 'Dad: the station does not open');
     expect(await storeTry(D, 'find') === 'paused', 'Dad: the store refuses a find while paused (\'paused\')');
     await shot(D, 'phone-10-paused-scan');
-    await D.getByRole('button', { name: 'OK', exact: true }).click();
-    expect(await until(D, ST[1].clue), 'Dad: OK goes back to clue 2');
+    expect(await until(D, ST[1].clue), 'Dad: clue 2 stays under the paused layer');
   }
   await sleep(800);
   expect(nSolved(G) === gSolved && nFound(D) === dFound, 'pause: nothing reached the database while paused');
@@ -1064,7 +1074,7 @@ async function pauseEndReveal() {
     expect(d >= 0 && d <= 3 && pausedFor >= d + 3 && clockSecs(later) > clockSecs(after),
       `TV: the clock goes on from where it stood, without the paused time (${frozen2}, then ${after} and ${later} after a ${Math.round(pausedFor)} s pause)`);
   }
-  for (const p of ph) expect(await gone(p, 'The hunt is paused'), `${p.devName}: the paused bar goes`);
+  for (const p of ph) expect(await gone(p, 'The hunt is paused') && await gone(p, 'Scan this card again'), `${p.devName}: the paused layer goes`);
   expect(await G.getByRole('textbox', { name: 'Your answer' }).isEditable(), 'Grace: the task is free again, where she left it');
   await solveTask(G, 3, { label: 'Grace station 4 after the pause' });
   await G.getByRole('button', { name: 'Show the next clue', exact: true }).click();
@@ -1073,6 +1083,12 @@ async function pauseEndReveal() {
   expect(await until(D, ST[1].title), 'Dad: after Resume the same card opens');
   for (let i = 0; i < 50 && nFound(D) === dFound; i++) await sleep(100);
   expect(nFound(D) === dFound + 1, 'Dad: the find is in the database');
+  // A gift from the folded panel under a clue, by a player who never reaches the manger.
+  await Bn.locator('#gift-panel > summary').click();
+  await Bn.getByRole('textbox', { name: 'Add a gift for Him' }).fill('Sing in the ward choir');
+  await Bn.getByRole('button', { name: 'Add', exact: true }).click();
+  expect(await until(Bn, 'Sing in the ward choir') && await dbWait(() => Object.keys(rec(Bn).gifts || {}).length === 1),
+    'Ben: a gift added from the panel under his clue reaches the database');
 
   // ----- MC ends the hunt early: Mom & Ellie lead -----
   await mc.getByRole('button', { name: 'End the hunt now', exact: true }).click();
@@ -1081,6 +1097,7 @@ async function pauseEndReveal() {
   expect(await until(mc, 'The hunt has ended') && await mc.getByRole('button', { name: 'Reveal the results on the TV', exact: true }).isVisible(), 'MC: ended, with the Reveal button');
   expect(await dbWait(m => m.ended && m.ended.early === true), 'end: meta.ended is saved with early: true');
   expect(await until(mc, 'Ended early'), 'MC: it says the hunt ended early');
+  expect(await until(mc, 'then the gifts for Him, under each name'), 'MC: the reveal plan includes the gifts for Him');
   await mc.evaluate(() => window.scrollTo(0, document.getElementById('hunt-h').getBoundingClientRect().top + window.scrollY - 40));
   await shot(mc, 'mc-11-ended', { top: false });
   expect(await tvShows(tv, 'ended') && await untilTv(tv, 'Gather around'), 'TV: "The hunt has ended. Gather around."');
@@ -1136,6 +1153,15 @@ async function pauseEndReveal() {
     }
   }
   await tv.keyboard.press('ArrowRight');
+  expect(await tvShows(tv, 'gifts'), 'TV: after 1st place, the gifts for Him, once');
+  {
+    const g = await tv.evaluate(() => [...document.querySelectorAll('#g-body .tv-giver')].map(s =>
+      [s.querySelector('.tv-giver-name').textContent, [...s.querySelectorAll('li')].map(l => l.textContent)]));
+    expect(JSON.stringify(g) === JSON.stringify([['Ben', ['Sing in the ward choir']], ['Grace', ['Pray every morning']]]),
+      'TV gifts: each gift under its giver\'s name, A to Z: ' + JSON.stringify(g));
+  }
+  await shot(tv, 'tv-12-reveal-gifts');
+  await tv.keyboard.press('ArrowRight');
   expect(await tvShows(tv, 'final'), 'TV: the final screen');
   {
     const names = await tv.evaluate(() => [...document.querySelectorAll('#rv-final li .nm')].map(e => e.textContent));
@@ -1156,6 +1182,7 @@ async function pauseEndReveal() {
     expect(JSON.stringify(got.map(N)) === JSON.stringify(TOP4.concat('Ben')), 'Ben: the same top 4, then his own 5th place: ' + got.join(', '));
     expect(await Bn.evaluate(() => { const me = document.querySelector('.places li.is-me'); return !!me && /5th/.test(me.textContent) && /You/.test(me.textContent); }), 'Ben: his own row says "You"');
   }
+  expect(await tvShows(tv, 'final'), 'TV: the final screen stays (the gifts do not come round again)');
   await phoneSecretsOk(Bn, 'after the reveal');
   await shot(Bn, 'phone-12-after-reveal');
 

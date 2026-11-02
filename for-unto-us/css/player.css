@@ -303,6 +303,7 @@ html:has(#app.app--welcome) { scroll-padding-bottom: calc(var(--joinbar-h, 144px
 .gift-panel .pair { margin-top: 16px; }
 .gift-panel .feedback { margin-top: 8px; }
 .gift-panel .gifts:empty { display: none; }
+.wall + .gift-panel { margin-top: 0; border-top: 0; }           /* the wall's own rule is enough */
 #early-gift-fb + .gifts { margin-top: 8px; }
 
 /* ---------- Paused by the MC: a full-screen layer over the phone; the screen under it stays as it was, held ---------- */
