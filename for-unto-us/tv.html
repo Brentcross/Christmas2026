@@ -15,7 +15,7 @@
 <body>
 <!-- The living-room screen. Everything is laid out in design px on a 1920 x 1080 stage that fit() scales.
      It reads only public data (HuntSeal.hunt) and the game state (StarStore). It never opens a card,
-     never needs the MC passphrase, and never shows a hint: hints and little-ones lines are phone-only. -->
+     never needs the MC passphrase, and never shows a hint: hints are phone-only. -->
 <div class="stage" id="stage">
   <div class="offline" id="offline" hidden>Reconnecting…</div>
 
@@ -153,7 +153,7 @@ addEventListener('resize', fit); fit();
   const PAGES_URL = 'https://brentcross.github.io/Christmas2026/for-unto-us/';
   const RACE_MS = 45000, GIFTS_MS = 15000;                 // during the race, once a gift exists
   const FINALE_VERSE_MS = 20000, FINALE_GIFTS_MS = 40000;  // once everyone is at the manger
-  const RELEASE_NAMES = { hint1: 'Hint 1', hint2: 'Hint 2', kids: 'Little ones clue' };
+  const RELEASE_NAMES = { hint1: 'Hint 1', hint2: 'Hint 2' };
   const STAR = '<svg class="star" viewBox="-20 -20 40 40" aria-hidden="true"><path d="M0-20 2.3-2.3 15 0 2.3 2.3 0 20-2.3 2.3-15 0-2.3-2.3Z"/><path transform="rotate(45)" d="M0-9.5 1.4-1.4 9.5 0 1.4 1.4 0 9.5-1.4 1.4-9.5 0-1.4-1.4Z"/></svg>';
   const params = new URLSearchParams(location.search);
   const VIEWS = ['waiting', 'race', 'gifts', 'finale', 'ended', 'verse', 'places', 'final'];
@@ -373,7 +373,7 @@ addEventListener('resize', fit); fit();
   // Hint releases for the quiet log: which clue and which kind only, never the text.
   function hintEvents(t) {
     const out = [];
-    for (const r of S.releases(t)) for (const k of ['hint1', 'hint2', 'kids']) if (r[k] != null) out.push({ n: r.n, kind: k, at: r[k + 'At'] || 0 });
+    for (const r of S.releases(t)) for (const k of ['hint1', 'hint2']) if (r[k] != null) out.push({ n: r.n, kind: k, at: r[k + 'At'] || 0 });
     return out.sort((a, b) => b.at - a.at || b.n - a.n);
   }
   // full: how many of the newest clues show as a block; brief: the newest block leaves out its hiding place.

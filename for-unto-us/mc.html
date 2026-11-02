@@ -32,14 +32,13 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
   const cssKey = k => '[data-key="' + String(k).replace(/["\\]/g, '\\$&') + '"]';
   const OPEN_KEY = 'for-unto-us:mc:open:' + S.gameId;
 
-  // The four things the MC can release for each clue, in the order phones show them.
+  // The three things the MC can release for each clue, in the order phones show them. (The hunt file's little-ones
+  // lines are not used: no little ones play on their own.)
   const KINDS = [
     { k: 'hint1', field: 'hint', short: 'Hint 1', label: 'Hint 1 · nudge', btn: 'Release hint 1', yes: 'Release',
       missing: 'No first hint is written for this clue.' },
     { k: 'hint2', field: 'hint2', short: 'Hint 2', label: 'Hint 2 · strong', btn: 'Release hint 2', yes: 'Release',
       missing: 'No second hint is written for this clue.' },
-    { k: 'kids', field: 'kids', short: 'Little ones', label: 'Little ones', btn: 'Release the little-ones clue', yes: 'Release',
-      missing: 'No little-ones line is written for this clue.' },
     { k: 'open', field: 'hide', short: 'Open', label: 'Open · hiding spot and code', btn: 'Open clue', yes: 'Open clue',
       missing: 'This clue has no card code.' },
   ];

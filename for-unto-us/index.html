@@ -383,7 +383,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
         '<p class="prompt">' + (team ? 'Name your team and list who’s on it.' : 'Pick a name everyone will recognise.') + '</p>' +
         '<form id="reg-form" novalidate>' +
         '<label class="field-label">' + (team ? 'Team name' : 'Your name') +
-          ' <input class="field" name="name" placeholder="' + (team ? 'Mom &amp; Ellie' : 'Ryan') + '" autocomplete="off" autocapitalize="words" maxlength="40" enterkeyhint="next"></label>' +
+          ' <input class="field" name="name" placeholder="' + (team ? 'Mom &amp; Ellie' : 'Your Name') + '" autocomplete="off" autocapitalize="words" maxlength="40" enterkeyhint="next"></label>' +
         (team ? '<label class="field-label">Who’s on the team? <input class="field" name="members" placeholder="Mom, Ellie" autocomplete="off" autocapitalize="words" maxlength="120" enterkeyhint="next" aria-describedby="members-help"></label>' +
           '<p class="help" id="members-help">Separate names with commas</p>' : '') +
         '<label class="field-label">Choose a 4-digit PIN' + (team ? ' for the team' : '') +
@@ -425,7 +425,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
   }
 
   // Clue: the riddle, plus only what the MC has released for this clue (live).
-  const HELP_KINDS = [['hint1', 'Hint'], ['hint2', 'Stronger hint'], ['kids', 'Little ones']];
+  const HELP_KINDS = [['hint1', 'Hint'], ['hint2', 'Stronger hint']];
   // `live`: the MC released something while this clue was on screen. If it lands out of sight (the riddle is
   // long), bring it into view, unless they are typing a code.
   function syncReleases(rel, live) {
@@ -445,7 +445,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
         : '';
       if (o) added = openSlot.firstElementChild;
     }
-    // Hints and the little-ones line, under the riddle, always in the same order.
+    // Hints, under the riddle, always in the same order.
     let note = relSlot.querySelector('.notice');
     const any = HELP_KINDS.some(([k]) => rel[k] != null && rel[k] !== '');
     if (!any) { if (note) note.remove(); }

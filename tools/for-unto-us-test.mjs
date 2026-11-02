@@ -669,7 +669,9 @@ async function onlineRace() {
 
   // ----- the MC releases help for clue 2, one at a time -----
   const s2 = ST[1];
-  const help = [['hint1', 'hint', 'Hint 1'], ['hint2', 'hint2', 'Hint 2'], ['kids', 'kids', 'Little ones']];
+  expect(!(await mc.getByRole('button', { name: /little-ones/i }).count()) && !(await everything(B)).includes(N(s2.kids || '\u0000')),
+    'MC: no Little ones release (no little ones play on their own), and no little-ones line on the phone');
+  const help = [['hint1', 'hint', 'Hint 1'], ['hint2', 'hint2', 'Hint 2']];
   for (const [kind, field, name] of help) {
     expect(!(await everything(B)).includes(N(s2[field])), `${name} for clue 2 is not on the stuck phone before the MC releases it`);
     expect(await mcRelease(mc, 2, kind), `MC: ${name} for clue 2 released`);
@@ -821,9 +823,10 @@ async function printCheck() {
   expect(!onCards.length, 'print: the cards carry only their code (no title, riddle, hint or setup note)' + (onCards.length ? ': ' + onCards.join('; ') : ''));
   const key = N(await page.evaluate(() => document.querySelector('.sheet--key').innerText));   // innerText: <br> is a line break
   const missing = [];
-  ST.forEach((s, i) => { for (const f of ['title', 'phrase', 'clue', 'answer', 'hide', 'solution', 'hint', 'hint2', 'kids', 'setup', 'code']) if (s[f] && !key.includes(N(s[f]))) missing.push(`${i + 1}:${f}`); });
+  ST.forEach((s, i) => { for (const f of ['title', 'phrase', 'clue', 'answer', 'hide', 'solution', 'hint', 'hint2', 'setup', 'code']) if (s[f] && !key.includes(N(s[f]))) missing.push(`${i + 1}:${f}`); });
   DECOYS.forEach((d, i) => { if (!key.includes(d.code) || !key.includes(N(d.hide))) missing.push('decoy ' + (i + 1)); });
-  expect(!missing.length, 'print: the answer key has every station’s riddle, answer, hiding spot, setup note, solution, hints, little-ones line and code, plus the decoys' + (missing.length ? ': missing ' + missing.join(', ') : ''));
+  expect(!missing.length, 'print: the answer key has every station’s riddle, answer, hiding spot, setup note, solution, hints and code, plus the decoys' + (missing.length ? ': missing ' + missing.join(', ') : ''));
+  expect(!key.includes('Little ones') && !ST.some(s => s.kids && key.includes(N(s.kids))), 'print: the answer key has no little-ones lines');
   await page.screenshot({ path: join(OUT, 'print-01-screen.png'), fullPage: false });
   // The printed PDF (Letter): every card's QR decodes from the printed page too.
   const pdf = join(OUT, 'print.pdf');
