@@ -34,7 +34,7 @@ html.tv-page, html.tv-page body { height: 100%; margin: 0; overflow: hidden; bac
 .tv-race-head, .tv-row { display: grid; grid-template-columns: 68px 372px minmax(0, 1fr) 168px; column-gap: 32px; align-items: center; }
 .tv-race-head { padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
 .tv-nums { display: grid; grid-template-columns: repeat(var(--n, 9), 1fr); gap: 8px; }
-.tv-nums span { text-align: center; font: 600 20px/1 var(--serif); letter-spacing: .04em; color: var(--ink-3); }
+.tv-nums span { text-align: center; font: 500 18px/1 var(--sans); font-feature-settings: 'tnum'; color: var(--ink-3); }
 .tv-race-head .tv-now { text-align: right; }
 
 .tv-row { height: 96px; border-bottom: 1px solid var(--rule); }
@@ -68,13 +68,13 @@ html.tv-page, html.tv-page body { height: 100%; margin: 0; overflow: hidden; bac
 .tv-standings--12 .tv-status small { margin-top: 4px; font-size: 18px; }   /* 18px: the TV floor */
 .tv-standings--12 ~ .tv-legend { display: none; }
 
-/* Legend: the whole verse, Roman keys I to IX (decorative) */
+/* Legend: the whole verse, small numbered keys matching the columns above (decorative) */
 .tv-legend { margin-top: 30px; padding-left: 100px; }
 .tv-legend .label { display: block; margin-bottom: 10px; }
 .tv-legend p { font: 500 29px/1.42 var(--serif); color: var(--ink-2); text-wrap: pretty; }
 .tv-legend .nb { white-space: nowrap; }
-.tv-legend sup { position: relative; top: -.62em; vertical-align: 0; margin-right: 5px;
-  font: 600 17px/1 var(--serif); letter-spacing: .04em; color: var(--gilt); }
+.tv-legend sup { position: relative; top: -.7em; vertical-align: 0; margin-right: 6px;
+  font: 600 14px/1 var(--sans); font-feature-settings: 'tnum'; color: var(--gilt); }
 
 /* ---------- Right rail ---------- */
 .tv-rail { display: flex; flex-direction: column; gap: 28px; min-height: 0; overflow: hidden; }
@@ -171,9 +171,16 @@ html.tv-page, html.tv-page body { height: 100%; margin: 0; overflow: hidden; bac
 .tv-final .sep { color: var(--ink-3); margin: 0 4px 0 10px; }   /* the space after it adds the rest */
 .tv-gift-wall { flex: 1; min-height: 0; margin-top: 36px; padding: 40px 48px; overflow: hidden;
   background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
-.tv-gift-cols { height: 100%; columns: 3; column-gap: 64px; }
-.tv-gift { break-inside: avoid; margin-bottom: 22px; font: italic 500 30px/1.35 var(--serif); color: var(--ink); }
-.tv-gift .by { margin-left: 4px; font: 400 18px/1 var(--sans); font-style: normal; color: var(--ink-3); white-space: nowrap; }   /* plus the space before it */
+.tv-gift-cols { height: 100%; columns: 3; column-gap: 64px; column-fill: auto; }
+/* One block per giver: their name, then their gifts in the order they wrote them. A block never splits across
+   columns. --gs scales the type down a step at a time when the wall is full (the page script picks it). */
+.tv-giver { break-inside: avoid; padding-bottom: calc(var(--gs, 1) * 30px); }
+.tv-giver-name { font: 600 calc(var(--gs, 1) * 30px)/1.15 var(--serif); color: var(--gilt); }
+.tv-giver-members { margin-top: 4px; font: 400 calc(var(--gs, 1) * 17px)/1.3 var(--sans); color: var(--ink-3); }
+.tv-giver ul { margin-top: calc(var(--gs, 1) * 8px); border-left: 1px solid var(--gilt-deep); padding-left: 18px; }
+.tv-giver li { font: italic 500 calc(var(--gs, 1) * 28px)/1.3 var(--serif); color: var(--ink); }
+.tv-giver li + li { margin-top: calc(var(--gs, 1) * 6px); }
+.tv-gifts-more { margin-top: 18px; font: 400 20px/1.3 var(--sans); color: var(--ink-3); }
 
 /* ---------- tv.html additions (page builder) ---------- */
 

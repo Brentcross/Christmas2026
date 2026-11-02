@@ -75,7 +75,7 @@ node tools/seal-test.mjs                 # check the seal, then commit for-unto-
 
 ### Tests
 
-`.github/workflows/tests.yml` runs the sealing and game-state tests on every push. Add the MC passphrase as the repository secret `FOR_UNTO_US_PASSPHRASE` (Settings > Secrets and variables > Actions) and it also checks the real sealed hunt and plays the whole race end to end.
+`.github/workflows/tests.yml` runs the sealing and game-state tests on the sample hunt on every push. Never give GitHub Actions the MC passphrase: the repo is public, so its Actions logs are too, and `for-unto-us-test.mjs` prints station titles as it goes. Run the tests that need the passphrase on your own computer.
 
 To run them locally, the browser tests need `playwright` (plus `jsqr` and `pngjs` for the QR checks) importable from the repo root, for example a `node_modules` folder symlinked in while testing (it is git-ignored; never commit it), and Chromium via `CHROMIUM` if Playwright's bundled browser isn't installed. `for-unto-us-test.mjs` also uses `pdfinfo` and `pdftoppm` (poppler).
 

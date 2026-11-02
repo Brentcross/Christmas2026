@@ -158,17 +158,12 @@ addEventListener('resize', fit); fit();
   const params = new URLSearchParams(location.search);
   const VIEWS = ['waiting', 'race', 'gifts', 'finale', 'ended', 'verse', 'places', 'final'];
   const PINNED = ['waiting', 'race', 'gifts', 'finale', 'ended', 'final'].indexOf(params.get('view')) >= 0 ? params.get('view') : null;
-  // The reveal: the verse, then each place (the last shown first), 1st held a little longer, then the final screen,
-  // which takes turns with the gifts wall when there are gifts. Right arrow or space moves on; left goes back.
-  const REVEAL_MS = { verse: 12000, place: 6000, first: 9000, final: 45000, gifts: 30000 };
+  // The reveal: the verse, then each place (the last shown first), 1st held a little longer, then the gifts for Him
+  // (once, when there are any), then the final screen, which stays. Right arrow or space moves on; left goes back.
+  const REVEAL_MS = { verse: 12000, place: 6000, first: 9000, gifts: 30000, final: 0 };
   const TOP = 4;                                           // places revealed (fewer when fewer are playing)
 
   // ---------- small helpers ----------
-  function roman(n) {
-    const r = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; let s = '';
-    for (const [v, c] of r) while (n >= v) { s += c; n -= v; }
-    return s;
-  }
   // QR with a 4-module quiet zone inside the SVG (the tile around it is plain white, no padding).
   function qrSvg(text) {
     const q = qrcode(0, 'M'); q.addData(text); q.make();
@@ -297,9 +292,9 @@ addEventListener('resize', fit); fit();
     }
   }
   function legendHtml() {
-    // The whole verse with Roman keys (decorative): keys never strand at a line end.
+    // The whole verse with numbered keys (decorative, matching the columns above): keys never strand at a line end.
     const parts = PH.map((ph, i) => {
-      const sup = '<sup>' + roman(i + 1) + '</sup>';
+      const sup = '<sup>' + (i + 1) + '</sup>';
       if (ph.length <= 16) return '<span class="nb">' + sup + esc(ph) + '</span>';
       const w = ph.split(/\s+/).map(esc);
       if (w.length >= 3) { w[0] = w[0] + '&nbsp;' + w[1]; w.splice(1, 1); }
@@ -325,7 +320,7 @@ addEventListener('resize', fit); fit();
   function renderStandings(t) {
     const rows = S.standings(t), fin = new Map(S.finishers(t).map((p, i) => [p.id, i + 1]));
     let nums = '';
-    for (let k = 1; k <= N; k++) nums += '<span>' + roman(k) + '</span>';
+    for (let k = 1; k <= N; k++) nums += '<span>' + k + '</span>';
     let html = '<div class="tv-race-head" aria-hidden="true"><span class="label">Place</span><span class="label">Team</span>' +
       '<span class="tv-nums" style="--n:' + N + '">' + nums + '</span><span class="label tv-now">Now</span></div>';
     if (!rows.length) html += '<p class="tv-empty">Nobody has joined yet. Scan the code to join the hunt.</p>';
@@ -465,22 +460,40 @@ addEventListener('resize', fit); fit();
     // After the reveal the strip holds the final places (the top ones); before it, the finishers once everyone is home.
     const revealed = isEnded(t) && !!revealAt(t);
     const lead = revealed ? 'Tonight’s places:' : 'At the manger:';
-    // Newest team first (each team's gifts in the order they wrote them); whatever doesn't fit hides.
-    const groups = [];
-    for (const g of S.allGifts(t)) { const top = groups[groups.length - 1]; if (top && top.id === g.id) top.list.push(g); else groups.push({ id: g.id, list: [g] }); }
-    const gifts = groups.reverse().flatMap(x => x.list).slice(0, 90);
-    const wall = gifts.length
-      // The space before the giver lets the giver drop whole to the next line without taking the gift's last word.
-      ? gifts.map(g => '<p class="tv-gift"><span>' + esc(g.text) + '</span> <span class="by">' + esc(g.name) + '</span></p>').join('')
-      : '<p class="tv-gifts-empty">Each team adds its gifts at the last station. They will appear here.</p>';
+    // One block per player or team, A to Z, each with their gifts in the order they wrote them.
+    const givers = giftGivers(t);
     const fins = revealed ? finalStandings(t).slice(0, TOP) : allDone ? S.finishers(t) : [];
     const strip = fins.length > 0;
     const el = $('g-body');
     if (!setHTML(el, '<span class="label label--gilt">Gifts for Him</span>' +
       '<div class="tv-gifts-title"><h1>They presented unto him gifts</h1><cite>Matthew 2:11</cite></div>' +
       (strip ? '<p class="tv-final">' + finalStrip(fins, fins.length, lead) + '</p>' : '') +
-      '<div class="tv-gift-wall"><div class="tv-gift-cols">' + wall + '</div></div>')) return;
+      '<div class="tv-gift-wall"><div class="tv-gift-cols">' + giftWallHtml(givers, givers.length) + '</div></div>')) return;
     if (strip) fitFinalStrip(el.querySelector('.tv-final'), fins, lead);
+    if (givers.length) fitGiftWall(el, givers);
+  }
+  function giftGivers(t) {
+    const byId = new Map();
+    for (const g of S.allGifts(t)) {
+      if (!byId.has(g.id)) { const p = S.player(t, g.id) || {}; byId.set(g.id, { name: g.name, members: p.team ? (p.members || []) : [], list: [] }); }
+      byId.get(g.id).list.push(g.text);
+    }
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  }
+  function giftWallHtml(givers, k) {
+    if (!givers.length) return '<p class="tv-gifts-empty">Gifts for Him appear here as players add them on their phones.</p>';
+    return givers.slice(0, k).map(g => '<section class="tv-giver"><h3 class="tv-giver-name">' + esc(g.name) + '</h3>' +
+      (g.members.length ? '<p class="tv-giver-members">' + esc(g.members.join(', ')) + '</p>' : '') +
+      '<ul>' + g.list.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></section>').join('');
+  }
+  // The wall shows everyone whole: the type steps down until it fits in its three columns, and only then do the
+  // last givers (A to Z) become "and N more".
+  function fitGiftWall(el, givers) {
+    const cols = el.querySelector('.tv-gift-cols'), over = () => cols.scrollWidth > cols.clientWidth + 1;
+    for (const gs of [1, .9, .8, .7]) { cols.style.setProperty('--gs', gs); if (!over()) return; }
+    let k = givers.length;
+    while (over() && k > 1) { k--; cols.innerHTML = giftWallHtml(givers, k); }
+    el.insertAdjacentHTML('beforeend', '<p class="tv-gifts-more">and ' + (givers.length - k) + ' more giving gifts</p>');
   }
 
   // ---------- finale: the whole verse ----------
@@ -562,15 +575,15 @@ addEventListener('resize', fit); fit();
   function revealSteps(t) {
     const k = Math.min(TOP, finalStandings(t).length), s = ['verse'];
     for (let j = k; j >= 1; j--) s.push('p' + j);
-    s.push('final');
     if (S.allGifts(t).length) s.push('gifts');
+    s.push('final');
     return s;
   }
   const stepMs = id => (id === 'verse' ? REVEAL_MS.verse : id === 'p1' ? REVEAL_MS.first : id[0] === 'p' ? REVEAL_MS.place : REVEAL_MS[id]);
   function revealStep(t) {
     const at = isEnded(t) ? revealAt(t) : null;
     if (!at) { rv = null; if (t) rvSeen = null; return null; }
-    const steps = revealSteps(t), fin = steps.indexOf('final'), now = Date.now();
+    const steps = revealSteps(t), fin = steps.length - 1, now = Date.now();
     if (!rv || rv.at !== at) {
       rv = { at, i: 0, since: now };
       if (rvSeen === undefined) {                            // pressed before this screen opened
@@ -579,12 +592,12 @@ addEventListener('resize', fit); fit();
       }
     }
     rvSeen = at;
-    rv.i = Math.min(rv.i, steps.length - 1);
-    for (let guard = 0; guard < 20; guard++) {
+    rv.i = Math.min(rv.i, fin);
+    for (let guard = 0; guard < 20 && rv.i < fin; guard++) {   // the final screen stays
       const id = steps[rv.i];
-      if (now - rv.since < stepMs(id) || (id === 'final' && rv.i === steps.length - 1)) break;   // no gifts: the final screen stays
+      if (now - rv.since < stepMs(id)) break;
       rv.since += stepMs(id);
-      rv.i = id === 'gifts' ? fin : rv.i + 1;
+      rv.i++;
     }
     return steps[rv.i];
   }
@@ -594,9 +607,8 @@ addEventListener('resize', fit); fit();
     const back = ev.key === 'ArrowLeft' || ev.key === 'PageUp';
     if ((!fwd && !back) || !rv || !S.tree) return;
     ev.preventDefault();
-    const steps = revealSteps(S.tree), fin = steps.indexOf('final'), id = steps[Math.min(rv.i, steps.length - 1)];
-    if (fwd) rv.i = id === 'gifts' ? fin : Math.min(rv.i + 1, steps.length - 1);
-    else rv.i = id === 'gifts' ? fin : Math.max(0, rv.i - 1);
+    const steps = revealSteps(S.tree);
+    rv.i = fwd ? Math.min(rv.i + 1, steps.length - 1) : Math.max(0, rv.i - 1);
     rv.since = Date.now();
     tick();
   });

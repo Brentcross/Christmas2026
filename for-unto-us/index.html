@@ -20,7 +20,16 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
 </head>
 <body>
 <div class="offline" id="offline" role="status" hidden>Reconnecting…</div>
-<div class="paused-bar" id="paused-bar" role="status" hidden><b>The hunt is paused.</b> Please wait for the MC.</div>
+<div class="paused-layer" id="paused-bar" role="alertdialog" aria-modal="true" aria-labelledby="paused-h" aria-describedby="paused-text" hidden>
+  <div class="paused-in">
+    <div class="paused-icon" aria-hidden="true"><i></i><i></i></div>
+    <p class="label label--gilt">Paused by the MC</p>
+    <h2 class="paused-h" id="paused-h">The hunt is paused</h2>
+    <figure class="paused-verse"><blockquote>“Be still, and know that I am God.”</blockquote><cite>Psalm 46:10</cite></figure>
+    <p class="paused-text" id="paused-text">Please wait for the MC. Phones down for now: your place is kept, and the clock has stopped.</p>
+    <p class="paused-scan" id="paused-scan" role="status" hidden>That card can’t open while the hunt is paused. Scan this card again once the hunt goes on.</p>
+  </div>
+</div>
 <main id="app"></main>
 <noscript><p class="center-note">This hunt needs JavaScript. Please turn it on and reload the page.</p></noscript>
 <script>
@@ -233,6 +242,41 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
     return '<div class="scriptures">' + list.map(scriptureHtml).join('') + '</div>';
   }
   const giftsList = gifts => '<ul class="gifts">' + gifts.map(g => '<li>' + esc(g) + '</li>').join('') + '</ul>';
+
+  // Gifts for Him, from the moment a player joins: those who never reach the manger still have theirs on the TV.
+  // The last station's task shows the same list and can add more. `open`: unfolded (the waiting screen).
+  const giftCount = p => (p.gifts.length ? p.gifts.length + ' added' : '');
+  function giftPanelHtml(p, open) {
+    return '<details class="gift-panel" id="gift-panel"' + (open ? ' open' : '') + '><summary>' +
+      '<span class="label label--gilt">Gifts for Him</span><span class="label" id="gift-count">' + giftCount(p) + '</span></summary>' +
+      '<p class="prompt">What gift will you give the Savior this Christmas? Your gifts appear on the TV under your name.</p>' +
+      '<form class="pair" id="early-gift-form" novalidate><input class="field" name="gift" placeholder="My gift to Him…" maxlength="80" autocomplete="off" enterkeyhint="enter" aria-label="Add a gift for Him">' +
+      '<button class="btn btn--secondary" type="submit">Add</button></form><p class="feedback" id="early-gift-fb" aria-live="polite"></p>' +
+      '<ul class="gifts" id="early-gift-list">' + p.gifts.map(g => '<li>' + esc(g) + '</li>').join('') + '</ul></details>';
+  }
+  function drawGiftPanel() {
+    const p = me(), list = $('#early-gift-list'), count = $('#gift-count');
+    if (!p || !list) return;
+    const html = p.gifts.map(g => '<li>' + esc(g) + '</li>').join('');
+    if (list.innerHTML !== html) list.innerHTML = html;
+    if (count.textContent !== giftCount(p)) count.textContent = giftCount(p);
+  }
+  function mountGiftPanel() {
+    const form = $('#early-gift-form'), fb = $('#early-gift-fb');
+    if (!form) return;
+    form.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const why = blockedMsg(S.tree);
+      if (why) { setFb(fb, '', why); return; }
+      const g = form.gift.value.trim().replace(/\s+/g, ' ').slice(0, 80);
+      if (!g) { setFb(fb, 'bad', 'Write a gift first.'); form.gift.focus(); return; }
+      const p = me();
+      settle(S.addGift ? S.addGift(myId, g) : S.setGifts(myId, (p ? p.gifts : []).concat(g)));
+      form.gift.value = '';
+      setFb(fb, 'good', 'Added.');
+      drawGiftPanel();
+    });
+  }
   // Store writes apply on this phone at once and resolve when saved (a failed save raises 'star-store-error').
   // A refusal (err.code, e.g. 'no-player' after the MC removed this player) means our copy was out of date:
   // draw the screen again from the current game.
@@ -373,9 +417,10 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
       html: () => appbar(t, p) +
         '<section class="section section--waiting"><p class="label label--gilt">You’re in</p><h1 class="h-display">' + esc(p.name) + '</h1>' + membersLine(p) +
         '<p class="text" id="wait-count">' + countHtml(t) + '</p></section>' +
-        wallHtml(0, '<p class="wall-after">Tonight you’ll write it, one phrase at a time.</p>') + intro +
+        wallHtml(0, '<p class="wall-after">Tonight you’ll write it, one phrase at a time.</p>') + giftPanelHtml(p, true) + intro +
         '<p class="center-note">Keep this page open. Your first clue will appear here.</p>' + switchLink() + demoNote(),
-      update() { $('#wait-count').innerHTML = countHtml(S.tree); },
+      mount: mountGiftPanel,
+      update() { $('#wait-count').innerHTML = countHtml(S.tree); drawGiftPanel(); },
     };
   }
 
@@ -448,9 +493,9 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
         '<section class="entry" aria-label="Enter a card code"><p class="entry-lead"><b>Found the card?</b> Scan it with your camera, or type its code.</p>' +
         '<form class="pair" id="code-form" novalidate><input class="field field--code" name="code" placeholder="CODE" maxlength="8" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Card code" aria-describedby="code-fb">' +
         '<button class="btn btn--primary" type="submit">Open</button></form><p class="feedback" id="code-fb" aria-live="polite"></p></section>' +
-        switchLink() + demoNote(),
-      mount() { syncReleases(S.releaseFor(t, prog.n)); },
-      update() { $('#place').innerHTML = placeHtml(S.tree, me()); syncReleases(S.releaseFor(S.tree, prog.n), true); },
+        giftPanelHtml(p, false) + switchLink() + demoNote(),
+      mount() { syncReleases(S.releaseFor(t, prog.n)); mountGiftPanel(); },
+      update() { $('#place').innerHTML = placeHtml(S.tree, me()); syncReleases(S.releaseFor(S.tree, prog.n), true); drawGiftPanel(); },
     };
   }
 
@@ -835,7 +880,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
   // While the MC has the hunt paused, the code entry, the task and "Show the next clue" are held (disabled, with a
   // note saying why); the screen itself stays as it is, so a half-done task is still there on resume. Only the
   // controls this hold disabled are let go again.
-  const HOLD = '#code-form input, #code-form button, #open-slot button, #task-body button, #task-body input, #next-btn';
+  const HOLD = '#code-form input, #code-form button, #open-slot button, #task-body button, #task-body input, #next-btn, #early-gift-form input, #early-gift-form button';
   function holdControls(on) {
     if (!on) {
       app.querySelectorAll('[data-held]').forEach(el => { el.disabled = false; el.removeAttribute('data-held'); });
@@ -851,10 +896,24 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
     });
   }
 
+  // While paused, a full-screen layer covers the phone (the screen under it stays as it was, held). A phone that can
+  // buzz does so once as the pause begins.
+  let wasPaused = false;
+  function showPaused(paused) {
+    if (paused === wasPaused) return;
+    wasPaused = paused;
+    pausedBar.hidden = !paused;
+    document.body.classList.toggle('is-paused', paused);
+    if (!paused) { document.getElementById('paused-scan').hidden = true; return; }
+    try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (e) { /* no buzz */ }
+    const a = document.activeElement;
+    if (a && a !== document.body && app.contains(a)) a.blur();   // the keyboard closes on a phone mid-typing
+  }
+
   function render() {
     updateOffline();
     const tNow = S && S.tree, paused = !!tNow && !isEnded(tNow) && isPaused(tNow);
-    pausedBar.hidden = !paused;
+    showPaused(paused);
     if (!paused) holdControls(false);           // before the screen updates, so its own logic decides what is enabled
     if (!S || !H || !HUNT) return show(problemScreen('no-hunt'));
     if (fatal) return show(problemScreen(fatal.code === 'insecure-context' || fatal.code === 'no-hunt' ? fatal.code : 'other'));
@@ -934,6 +993,7 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
     const ended = isEnded(S.tree);
     if (ended && !view && cur.key && cur.key.indexOf('ended:') === 0) return;   // the ended screen already says so
     if (form && form.isConnected && source !== 'link') { setFb(fb, '', ended ? ENDED_MSG : PAUSED_MSG); return; }
+    if (!ended && wasPaused) { document.getElementById('paused-scan').hidden = false; return; }   // said on the paused layer
     showMessage(ended
       ? { label: 'The hunt has ended', title: 'The hunt has ended', text: 'Look at the TV. The MC will share the places there.', button: 'OK' }
       : { label: 'Paused', title: 'The hunt is paused', text: 'Please wait for the MC. Scan this card again once the hunt goes on.', button: 'OK' });

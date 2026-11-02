@@ -376,7 +376,8 @@ document.write('<link rel="icon" type="image/svg+xml" href="' + ForUntoUsAsset('
     for (let i = count; i >= 1; i--) order.push(S.ordinal(i));
     const steps = ['Isaiah 9:6 first'];
     if (count) steps.push('then ' + names(order) + ' place' + (count > 1 ? ', a few seconds apart' : ''));
-    steps.push('then ' + (count ? 'everyone together' : 'the closing words') + ' with Luke 2:11 and any gifts for Him');
+    if (S.allGifts(S.tree).length) steps.push('then the gifts for Him, under each name');
+    steps.push('then ' + (count ? 'everyone together' : 'the closing words') + ' with Luke 2:11');
     let reveal;
     if (!m.revealAt) {
       reveal = '<span class="label">The reveal</span>' +
